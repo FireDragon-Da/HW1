@@ -4,47 +4,59 @@ using UnityEngine;
 using UnityEngine.Audio;
 
 public class Controller : MonoBehaviour
-{   
-    public AudioMixer mixer;
-    public AudioSource source;
-    public GameObject Open;
-    public GameObject Closed;
-    private bool isClosed = true;
+{
+    public Sprite newSprite; 
+    private Sprite originalSprite; 
+    private SpriteRenderer spriteRenderer;
+    
+    public AudioClip soundClip; 
+    private AudioSource audioSource;
 
-    private void OnMouseDown()
+    private void Start()
     {
-        ToggleDoor();
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            originalSprite = spriteRenderer.sprite; 
+        }
+
+        audioSource = gameObject.AddComponent<AudioSource>();
+        if (soundClip != null)
+        {
+            audioSource.clip = soundClip;
+            audioSource.loop = true; 
+        }
     }
 
-    private void ToggleDoor()
+    private void OnCollisionStay2D(Collision2D collision)
     {
-        if (isClosed)
-            OpenIt();
-        else
-            CloseIt();
+        if (collision.gameObject.name == "Black") 
+        {
+            if (spriteRenderer != null && newSprite != null)
+            {
+                spriteRenderer.sprite = newSprite;
+            }
+
+            if (!audioSource.isPlaying && soundClip != null)
+            {
+                audioSource.Play();
+            }
+        }
     }
 
-    private void SwitchDoorSprite(bool open)
+    private void OnCollisionExit2D(Collision2D collision)
     {
-        Open.SetActive(open);
-        Closed.SetActive(!open);
+        if (collision.gameObject.name == "Black") 
+        {
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.sprite = originalSprite;
+            }
 
-        isClosed = !isClosed;
-    }
-
-    private void OpenIt()
-    {
-        SwitchDoorSprite(true);
-
-        mixer.SetFloat("LowpassCutoff", 5000);
-
-    }
-
-    private void CloseIt()
-    {
-        SwitchDoorSprite(false);
-
-         mixer.SetFloat("LowpassCutoff", 300);
-
+            if (audioSource.isPlaying)
+            {
+                audioSource.Stop();
+            }
+        }
     }
 }
